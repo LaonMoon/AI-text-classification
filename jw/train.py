@@ -11,9 +11,9 @@ from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
 from scipy.special import softmax
 
-train_df = pd.read_csv('/content/drive/MyDrive/Colab Notebooks/AI글판별/train.csv', encoding='utf-8-sig')
-test_df = pd.read_csv('/content/drive/MyDrive/Colab Notebooks/AI글판별/test.csv', encoding='utf-8-sig')
-sample_submission = pd.read_csv('/content/drive/MyDrive/Colab Notebooks/AI글판별/sample_submission.csv', encoding='utf-8-sig')
+train_df = pd.read_csv('./train.csv', encoding='utf-8-sig')
+test_df = pd.read_csv('./test.csv', encoding='utf-8-sig')
+sample_submission = pd.read_csv('./sample_submission.csv', encoding='utf-8-sig')
 
 def split_paragraphs(full_text: str):
     paras = re.split(r'\n{2,}', str(full_text))
@@ -36,7 +36,7 @@ datasets = DatasetDict({
 })
 
 model_name = 'monologg/kobert'
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2).to(device)
 
 def tokenize_function(examples):
@@ -65,7 +65,7 @@ def compute_metrics(eval_pred):
 
 training_args = TrainingArguments(
     output_dir='output',
-    num_train_epochs=3,
+    num_train_epochs=1,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
     learning_rate=2e-5,
@@ -92,3 +92,7 @@ generated_probs = probs[:, 1]  # 1번 클래스가 'generated'일 경우
 sample_submission['generated'] = generated_probs
 sample_submission.to_csv('baseline_submission.csv', index=False)
 print('baseline_submission.csv 가 생성되었습니다.')
+
+# model.save_pretrained("output/model")
+# tokenizer.save_pretrained("output/tokenizer")
+# print("모델과 토크나이저가 output/model 에 저장되었습니다.")
